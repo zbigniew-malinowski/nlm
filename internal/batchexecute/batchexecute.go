@@ -296,8 +296,13 @@ func decodeChunkedResponse(raw string) ([]Response, error) {
 		// First try to parse as regular JSON
 		var rpcBatch [][]interface{}
 		if err := json.Unmarshal(chunk, &rpcBatch); err != nil {
-			// If that fails, try unescaping the JSON string first
-			unescaped, err := strconv.Unquote("\"" + string(chunk) + "\"")
+			// If that fails, try unescaping the JSON string first.
+			// The chunk already contains the surrounding quotes, so we
+			// need to pass it directly to strconv.Unquote without
+			// adding extra quotes. Adding additional quotes results in
+			// invalid syntax errors when the chunk itself begins with
+			// a quote character.
+			unescaped, err := strconv.Unquote(string(chunk))
 			if err != nil {
 				if debug {
 					fmt.Printf("Failed to unescape chunk: %v\n", err)
@@ -339,8 +344,10 @@ func decodeChunkedResponse(raw string) ([]Response, error) {
 					// Try to parse the data string
 					var data interface{}
 					if err := json.Unmarshal([]byte(dataStr), &data); err != nil {
-						// If direct parsing fails, try unescaping first
-						unescaped, err := strconv.Unquote("\"" + dataStr + "\"")
+						// If direct parsing fails, try unescaping first. The
+						// string already includes quotes, so avoid wrapping it
+						// again when calling strconv.Unquote.
+						unescaped, err := strconv.Unquote(dataStr)
 						if err != nil {
 							if debug {
 								fmt.Printf("Failed to unescape data: %v\n", err)
