@@ -10,7 +10,7 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	// TODO: separate from anything nlm related
-	pb "github.com/tmc/nlm/gen/notebooklm/v1alpha1"
+	pb "github.com/zbigniew-malinowski/nlm/gen/notebooklm/v1alpha1"
 )
 
 func TestUnmarshal(t *testing.T) {

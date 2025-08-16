@@ -1,4 +1,4 @@
-module github.com/tmc/nlm
+module github.com/zbigniew-malinowski/nlm
 
 go 1.23
 
