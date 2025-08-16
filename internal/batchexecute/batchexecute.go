@@ -296,15 +296,17 @@ func decodeChunkedResponse(raw string) ([]Response, error) {
 		// First try to parse as regular JSON
 		var rpcBatch [][]interface{}
 		if err := json.Unmarshal(chunk, &rpcBatch); err != nil {
-			// If that fails, try unescaping the JSON string first
-			unescaped, err := strconv.Unquote("\"" + string(chunk) + "\"")
-			if err != nil {
+			// Some responses send the chunk as a quoted JSON string.
+			// Attempt to decode the chunk as a string and then
+			// unmarshal the contained JSON.
+			var chunkStr string
+			if err := json.Unmarshal(chunk, &chunkStr); err != nil {
 				if debug {
-					fmt.Printf("Failed to unescape chunk: %v\n", err)
+					fmt.Printf("Failed to parse chunk: %v\n", err)
 				}
 				return nil, fmt.Errorf("failed to parse chunk: %w", err)
 			}
-			if err := json.Unmarshal([]byte(unescaped), &rpcBatch); err != nil {
+			if err := json.Unmarshal([]byte(chunkStr), &rpcBatch); err != nil {
 				if debug {
 					fmt.Printf("Failed to parse unescaped chunk: %v\n", err)
 				}
@@ -339,9 +341,8 @@ func decodeChunkedResponse(raw string) ([]Response, error) {
 					// Try to parse the data string
 					var data interface{}
 					if err := json.Unmarshal([]byte(dataStr), &data); err != nil {
-						// If direct parsing fails, try unescaping first
-						unescaped, err := strconv.Unquote("\"" + dataStr + "\"")
-						if err != nil {
+						var unescaped string
+						if err := json.Unmarshal([]byte(dataStr), &unescaped); err != nil {
 							if debug {
 								fmt.Printf("Failed to unescape data: %v\n", err)
 							}

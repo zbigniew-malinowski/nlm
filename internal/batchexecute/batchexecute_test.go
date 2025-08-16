@@ -109,8 +109,9 @@ func TestDecodeResponse(t *testing.T) {
 			err: nil,
 		},
 		{
-			name:  "YouTube Source Addition Response",
-			input: `)]}'\n105\n[["wrb.fr","izAoDd",null,null,null,[3],"generic"]]\n6\n[["e",4,null,null,237]]`,
+			name:    "YouTube Source Addition Response",
+			input:   `)]}'\n105\n[["wrb.fr","izAoDd",null,null,null,[3],"generic"]]\n6\n[["e",4,null,null,237]]`,
+			chunked: true,
 			expected: []Response{
 				{
 					ID:    "izAoDd",
