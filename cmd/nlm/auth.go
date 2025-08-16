@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/tmc/nlm/internal/auth"
+	"github.com/zbigniew-malinowski/nlm/internal/auth"
 	"golang.org/x/term"
 )
 

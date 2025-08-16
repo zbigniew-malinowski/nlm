@@ -10,9 +10,9 @@ import (
 	"text/tabwriter"
 	"time"
 
-	pb "github.com/tmc/nlm/gen/notebooklm/v1alpha1"
-	"github.com/tmc/nlm/internal/api"
-	"github.com/tmc/nlm/internal/batchexecute"
+	pb "github.com/zbigniew-malinowski/nlm/gen/notebooklm/v1alpha1"
+	"github.com/zbigniew-malinowski/nlm/internal/api"
+	"github.com/zbigniew-malinowski/nlm/internal/batchexecute"
 )
 
 // Global flags

@@ -7,7 +7,7 @@
 ## Installation 🚀
 
 ```bash
-go install github.com/tmc/nlm/cmd/nlm@latest
+go install github.com/zbigniew-malinowski/nlm/cmd/nlm@latest
 ```
 
 ### Usage 
