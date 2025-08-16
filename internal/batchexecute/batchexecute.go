@@ -296,6 +296,7 @@ func decodeChunkedResponse(raw string) ([]Response, error) {
 		// First try to parse as regular JSON
 		var rpcBatch [][]interface{}
 		if err := json.Unmarshal(chunk, &rpcBatch); err != nil {
+
 			// Some responses send the chunk as a quoted JSON string.
 			// Attempt to decode the chunk as a string and then
 			// unmarshal the contained JSON.
@@ -341,8 +342,10 @@ func decodeChunkedResponse(raw string) ([]Response, error) {
 					// Try to parse the data string
 					var data interface{}
 					if err := json.Unmarshal([]byte(dataStr), &data); err != nil {
+
 						var unescaped string
 						if err := json.Unmarshal([]byte(dataStr), &unescaped); err != nil {
+
 							if debug {
 								fmt.Printf("Failed to unescape data: %v\n", err)
 							}
