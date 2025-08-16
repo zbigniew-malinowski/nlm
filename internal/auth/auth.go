@@ -106,7 +106,12 @@ func (ba *BrowserAuth) GetAuth(opts ...Option) (token, cookies string, err error
 	}
 	defer cancel()
 
-	ctx, cancel = context.WithTimeout(ctx, 60*time.Second)
+	// Allow ample time for the user to complete any interactive
+	// authentication flows in the browser before we give up.  The
+	// previous 60s deadline was too short and caused "context deadline
+	// exceeded" errors if the user took longer to sign in, so increase it
+	// to five minutes.
+	ctx, cancel = context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
 
 	if ba.debug {
@@ -265,8 +270,12 @@ func (ba *BrowserAuth) extractAuthData(ctx context.Context) (token, cookies stri
 		return "", "", fmt.Errorf("failed to load page: %w", err)
 	}
 
-	// Create timeout context
-	pollCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	// After the page loads we poll for authentication data.  Give the user
+	// several minutes here as well since the initial load may redirect
+	// through multiple login screens.  This keeps the overall timeout under
+	// the 5 minute limit above but provides a lot more breathing room than
+	// the previous 30s window.
+	pollCtx, cancel := context.WithTimeout(ctx, 4*time.Minute)
 	defer cancel()
 
 	ticker := time.NewTicker(2 * time.Second)
