@@ -175,10 +175,12 @@ func (c *Client) Execute(rpcs []RPC) (*Response, error) {
 			fmt.Printf("Failed to decode chunked response: %v\n", err)
 		}
 		// Fallback to regular response parsing
-		responses, err = decodeResponse(string(body))
-		if err != nil {
-			return nil, fmt.Errorf("decode response: %w", err)
+		tmp, err2 := decodeResponse(string(body))
+		if err2 != nil {
+			return nil, fmt.Errorf("decode chunked response: %v; decode response: %w", err, err2)
 		}
+		responses = tmp
+		err = nil
 	}
 
 	if len(responses) == 0 {
@@ -264,13 +266,14 @@ func decodeChunkedResponse(raw string) ([]Response, error) {
 			continue
 		}
 
-		totalLength, err := strconv.Atoi(lengthStr)
+		totalLength64, err := strconv.ParseInt(lengthStr, 16, 64)
 		if err != nil {
 			if debug {
 				fmt.Printf("Invalid length string: %q\n", lengthStr)
 			}
 			return nil, fmt.Errorf("invalid chunk length: invalid syntax")
 		}
+		totalLength := int(totalLength64)
 
 		if debug {
 			fmt.Printf("Found chunk length: %d from string: %q\n",
@@ -296,6 +299,13 @@ func decodeChunkedResponse(raw string) ([]Response, error) {
 		// First try to parse as regular JSON
 		var rpcBatch [][]interface{}
 		if err := json.Unmarshal(chunk, &rpcBatch); err != nil {
+			if debug {
+				fmt.Printf("Failed to parse chunk as JSON: %v\n", err)
+				fmt.Printf("Chunk prefix: %q\n", string(chunk[:min(100, len(chunk))]))
+				if len(chunk) > 100 {
+					fmt.Printf("Chunk suffix: %q\n", string(chunk[max(0, len(chunk)-100):]))
+				}
+			}
 
 			// Some responses send the chunk as a quoted JSON string.
 			// Attempt to decode the chunk as a string and then
@@ -303,15 +313,16 @@ func decodeChunkedResponse(raw string) ([]Response, error) {
 			var chunkStr string
 			if err := json.Unmarshal(chunk, &chunkStr); err != nil {
 				if debug {
-					fmt.Printf("Failed to parse chunk: %v\n", err)
+					fmt.Printf("Failed to decode chunk as string: %v\n", err)
 				}
-				return nil, fmt.Errorf("failed to parse chunk: %w", err)
+				return nil, fmt.Errorf("parse chunk: %w", err)
 			}
 			if err := json.Unmarshal([]byte(chunkStr), &rpcBatch); err != nil {
 				if debug {
 					fmt.Printf("Failed to parse unescaped chunk: %v\n", err)
+					fmt.Printf("Unescaped chunk prefix: %q\n", chunkStr[:min(100, len(chunkStr))])
 				}
-				return nil, fmt.Errorf("failed to parse chunk: %w", err)
+				return nil, fmt.Errorf("parse chunk: %w", err)
 			}
 		}
 
@@ -443,6 +454,13 @@ func handleChunk(chunk []byte, responses *[]Response) error {
 
 func min(a, b int) int {
 	if a < b {
+		return a
+	}
+	return b
+}
+
+func max(a, b int) int {
+	if a > b {
 		return a
 	}
 	return b
