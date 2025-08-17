@@ -266,13 +266,14 @@ func decodeChunkedResponse(raw string) ([]Response, error) {
 			continue
 		}
 
-		totalLength, err := strconv.Atoi(lengthStr)
+		totalLength64, err := strconv.ParseInt(lengthStr, 16, 64)
 		if err != nil {
 			if debug {
 				fmt.Printf("Invalid length string: %q\n", lengthStr)
 			}
 			return nil, fmt.Errorf("invalid chunk length: invalid syntax")
 		}
+		totalLength := int(totalLength64)
 
 		if debug {
 			fmt.Printf("Found chunk length: %d from string: %q\n",
